@@ -6,6 +6,8 @@ fn main() -> Result<()> {
     tonic_prost_build::configure()
         .build_client(false)
         .build_server(true)
+        // Allow proto3 optional fields for older protoc versions (requires flag)
+        .protoc_arg("--experimental_allow_proto3_optional")
         .bytes(".indexer.LibraryCellFound.cell")
         .bytes(".indexer.LibraryCellsBatchEntry.cell")
         .bytes(".indexer.BlockChunk.data")
