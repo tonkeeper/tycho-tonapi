@@ -36,14 +36,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     libssl1.1 \
     zlib1g \
+    wget \
     && rm -rf /var/lib/apt/lists/* \
     && update-ca-certificates
 
 # Create non-root user
 RUN useradd -m -u 10001 -s /usr/sbin/nologin appuser
 
+# Prepare app directory and permissions
+RUN mkdir -p /app && chown -R appuser:appuser /app
+
 # Copy binary
 COPY --from=builder /build/target/release/tycho-tonapi /usr/local/bin/tycho-tonapi
+
+# Copy entrypoint script
+COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Workdir and data/config locations
 WORKDIR /app
@@ -59,6 +67,6 @@ EXPOSE 50051/tcp
 
 USER appuser
 
-# By default, show help. Provide full args to `docker run` to start the node.
-ENTRYPOINT ["/usr/local/bin/tycho-tonapi"]
-CMD ["--help"]
+# Use entrypoint that initializes config and downloads global config as per README
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD []
