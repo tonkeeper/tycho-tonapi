@@ -27,14 +27,14 @@ pub struct Cmd {
     #[clap(
         short = 'i',
         long,
-        conflicts_with_all = ["config", "global_config", "keys", "logger_config", "import_zerostate"]
+        conflicts_with_all = ["config", "global_config", "keys", "logger_config", "import_zerostate", "cold_boot"]
     )]
     pub init_config: Option<PathBuf>,
 
     #[clap(
         long,
         short,
-        conflicts_with_all = ["config", "global_config", "keys", "logger_config", "import_zerostate"]
+        conflicts_with_all = ["config", "global_config", "keys", "logger_config", "import_zerostate", "cold_boot"]
     )]
     pub all: bool,
 
@@ -61,6 +61,10 @@ pub struct Cmd {
     /// list of zerostate files to import
     #[clap(long)]
     pub import_zerostate: Option<Vec<PathBuf>>,
+
+    /// Overwrite cold boot type. Default: `latest-persistent`
+    #[clap(long)]
+    pub cold_boot: Option<ColdBootType>,
 }
 
 impl Cmd {
@@ -144,9 +148,8 @@ impl Cmd {
         };
 
         // Sync node.
-        let init_block_id = node
-            .init(ColdBootType::LatestPersistent, self.import_zerostate, None)
-            .await?;
+        let boot_type = self.cold_boot.unwrap_or(ColdBootType::LatestPersistent);
+        let init_block_id = node.init(boot_type, self.import_zerostate, None).await?;
         node.update_validator_set_from_shard_state(&init_block_id)
             .await?;
 

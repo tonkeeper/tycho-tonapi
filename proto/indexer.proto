@@ -168,6 +168,16 @@ message ShardAccount {
     // the first one is shard state root proof cell
     // and the second is account-in-state proof.
     optional bytes proof = 3;
+    // The latest known transaction at the time of accessing the state (if any).
+    // Can be used instead of `proof` if only something like LT is needed.
+    optional TransactionId lastTransaction = 4;
+}
+
+message TransactionId {
+    // Logical time of transaction.
+    uint64 lt = 1;
+    // 32 bytes of the transaction hash.
+    bytes hash = 2;
 }
 
 // === Get library cell ===

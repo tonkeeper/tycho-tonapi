@@ -576,7 +576,7 @@ impl AppState {
 
         let mc_state_info = cached.mc_state_info;
 
-        let (account_state, proof) = if with_proof {
+        let (account_state, prev_lt, prev_hash, proof) = if with_proof {
             let address = address.clone();
             let db = self.inner.db.clone();
             let span = tracing::Span::current();
@@ -589,15 +589,19 @@ impl AppState {
                 let usage_tree = UsageTree::new(UsageTreeMode::OnLoad);
 
                 // Get account and prepare its proof
+                let mut prev_lt = 0;
+                let mut prev_hash = HashBytes::ZERO;
                 let account_proof;
                 let account = {
                     let state_root = usage_tree.track(cached.state.root_cell());
                     let state = state_root.parse::<ShardStateUnsplit>()?;
                     let (accounts, _) = state.accounts.load()?.into_parts();
 
-                    let account = accounts
-                        .get(address.address)?
-                        .map(|(_, account)| account.account.into_inner());
+                    let account = accounts.get(address.address)?.map(|(_, account)| {
+                        prev_lt = account.last_trans_lt;
+                        prev_hash = account.last_trans_hash;
+                        account.account.into_inner()
+                    });
 
                     account_proof = {
                         let state_root = cached.state.root_cell().as_ref();
@@ -654,20 +658,27 @@ impl AppState {
                     buffer
                 };
 
-                Ok::<_, StateError>((account, Some(proof)))
+                Ok::<_, StateError>((account, prev_lt, prev_hash, Some(proof)))
             })
             .await
             .map_err(|_| StateError::Cancelled)??
         } else {
             // Simple case where we just access the account cell.
 
+            let mut prev_lt = 0;
+            let mut prev_hash = HashBytes::ZERO;
+
             let account = cached
                 .accounts
                 .get(address.address)?
-                .map(|(_, account)| account.account.into_inner())
+                .map(|(_, account)| {
+                    prev_lt = account.last_trans_lt;
+                    prev_hash = account.last_trans_hash;
+                    account.account.into_inner()
+                })
                 .map(Boc::encode);
 
-            (account, None)
+            (account, prev_lt, prev_hash, None)
         };
 
         Ok(WithMcStateInfo::new(
@@ -675,6 +686,8 @@ impl AppState {
             Some(AccessedShardAccount {
                 account_state: account_state.map(Bytes::from),
                 proof: proof.map(Bytes::from),
+                last_trans_lt: prev_lt,
+                last_trans_hash: prev_hash,
             }),
         ))
     }
@@ -1425,6 +1438,8 @@ pub struct AppStatus {
 pub struct AccessedShardAccount {
     pub account_state: Option<Bytes>,
     pub proof: Option<Bytes>,
+    pub last_trans_lt: u64,
+    pub last_trans_hash: HashBytes,
 }
 
 #[derive(Default, Debug, Clone, Copy)]

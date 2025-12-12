@@ -28,7 +28,8 @@ wget -O global-config.json https://testnet.tychoprotocol.com/global-config.json
 tycho-tonapi run \
   --config config.json \
   --global-config global-config.json \
-  --keys keys.json
+  --keys keys.json \
+  --cold-boot latest-persistent # or `genesis` to sync from the zerostate
 ```
 
 By default the node will listen on the following addresses:
@@ -43,6 +44,26 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r ./scripts/requirements.txt
 python ./scripts/gen-dashboard.py > dashboard.json
+```
+
+## How to sync from S3
+
+The node can pull archives not only from the blockchain, but also from a custom S3 bucket. To use this feature, you need to specify the S3 client settings in the config:
+
+```bash
+{
+  ...
+  "s3_client": {
+    "region": "europe-west1",
+    "endpoint": "https://storage.googleapis.com",
+    "bucket": "your-archives-bucket",
+    "credentials": {
+      "access_key": "GOOG1EACCESSKEY123",
+      "secret_key": "verySecretKey"
+    }
+  }
+  ...
+}
 ```
 
 ## Contributing

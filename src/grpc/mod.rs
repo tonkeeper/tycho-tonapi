@@ -166,6 +166,10 @@ impl proto::tycho_indexer_server::TychoIndexer for GrpcServer {
                 mc_state_info: Some(res.mc_state_info.into()),
                 account_state: accessed.account_state,
                 proof: accessed.proof,
+                last_transaction: (accessed.last_trans_lt != 0).then(|| proto::TransactionId {
+                    lt: accessed.last_trans_lt,
+                    hash: accessed.last_trans_hash.as_array().to_vec(),
+                }),
             }),
             None => ProtoAccount::BlockNotFound(proto::BlockNotFound {
                 mc_state_info: Some(res.mc_state_info.into()),

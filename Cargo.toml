@@ -1,6 +1,6 @@
 [package]
 name = "tycho-tonapi"
-version = "0.1.3"
+version = "0.1.6"
 edition = "2024"
 rust-version = "1.89.0"
 
@@ -31,21 +31,25 @@ tikv-jemallocator = { version = "0.6.0", features = [
     "profiling",
 ] }
 
-tycho-block-util = { version = "0.3.3" }
-tycho-core = { version = "0.3.3" }
-tycho-storage = { version = "0.3.3" }
+tycho-block-util = { version = "0.3.4" }
+tycho-core = { version = "0.3.4", features = ["cli"] }
+tycho-storage = { version = "0.3.4" }
 tycho-types = { version = "0.3.0", features = ["sync", "base64", "models", "tycho", "rand9"] }
-tycho-util = { version = "0.3.3", features = ["cli"] }
+tycho-util = { version = "0.3.4", features = ["cli"] }
+
+[patch.crates-io]
+tycho-block-util = { git = "https://github.com/broxus/tycho.git", rev = "f541531d0b38d21922cbb01ac372432459277959" }
+tycho-core = { git = "https://github.com/broxus/tycho.git", rev = "f541531d0b38d21922cbb01ac372432459277959" }
+tycho-storage = { git = "https://github.com/broxus/tycho.git", rev = "f541531d0b38d21922cbb01ac372432459277959" }
+tycho-util = { git = "https://github.com/broxus/tycho.git", rev = "f541531d0b38d21922cbb01ac372432459277959" }
 
 [build-dependencies]
 anyhow = "1"
 tonic-prost-build = "*"
 
+[features]
+default = ["s3"]
+s3 = ["tycho-core/s3"]
+
 [package.metadata.cargo-shear]
 ignored = ["prost", "tonic-prost"]
-
-[patch.crates-io]
-tycho-block-util = { git = "https://github.com/broxus/tycho.git", rev = "e4ccaa1ce2ff15e1d484d1216ce1c11568563705" }
-tycho-core = { git = "https://github.com/broxus/tycho.git", rev = "e4ccaa1ce2ff15e1d484d1216ce1c11568563705" }
-tycho-storage = { git = "https://github.com/broxus/tycho.git", rev = "e4ccaa1ce2ff15e1d484d1216ce1c11568563705" }
-tycho-util = { git = "https://github.com/broxus/tycho.git", rev = "e4ccaa1ce2ff15e1d484d1216ce1c11568563705" }
